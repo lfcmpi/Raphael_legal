@@ -1,0 +1,24 @@
+services:
+  api:
+    volumes:
+      - ./api:/app/api
+      - ./raphael_legal:/app/raphael_legal
+      - ./templates:/app/templates
+      - ./uploads:/app/uploads
+      - ./output:/app/output
+    command: sh -c "python -m api.seed && uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - api
+
+volumes:
+  frontend-node-modules:

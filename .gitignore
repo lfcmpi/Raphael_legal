@@ -1,0 +1,11 @@
+output/
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+.DS_Store
+uploads/
+*.db
+frontend/node_modules/
+frontend/dist/

@@ -1,0 +1,41 @@
+{
+  "id": "msg_mock_marcas_001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-4-6",
+  "stop_reason": "end_turn",
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "toolu_mock_001",
+      "name": "extrair_ficha_caso",
+      "input": {
+        "cliente_nome": "João Silva / JS Alimentos",
+        "cliente_cpf_cnpj": "12.345.678/0001-90",
+        "cliente_contato": "⚠️ PENDENTE: contato",
+        "cliente_endereco": "Rua das Flores, 123, São Paulo/SP, CEP 01234-000",
+        "parte_contraria_nome": "N/A",
+        "parte_contraria_cpf_cnpj": "N/A",
+        "materia": "Marcas",
+        "complexidade": "Simples",
+        "justificativa_complexidade": "Registro de marca padrão no INPI, classe única, sem oposição identificada na busca prévia.",
+        "resumo": "João Silva, representando JS Alimentos, deseja registrar a marca 'Café Premium' no INPI na classe 30 (alimentos). Já realizou busca prévia sem encontrar marca similar. Solicita orientação sobre passos e custos do processo de registro.",
+        "documentos_recebidos": ["Comprovante de CNPJ"],
+        "documentos_pendentes": [
+          "Logomarca em alta resolução (se registro misto/figurativo)",
+          "Procuração assinada pelo representante legal",
+          "Contrato social ou documento que comprove poderes do representante",
+          "Comprovante de pagamento da GRU (taxa INPI)"
+        ]
+      }
+    },
+    {
+      "type": "text",
+      "text": "## 2. PANORAMA ESTRATÉGICO\n\n**VIA ADMINISTRATIVA — Registro de marca no INPI**\n- **O quê:** Petição de depósito de registro de marca nominativa ou mista \"Café Premium\" na classe 30 (NCL) junto ao INPI.\n- **Fundamento legal:** [VERIFICAR: Lei 9.279/1996, Arts. 122 a 175 — Lei da Propriedade Industrial]\n- **Prazo estimado:** 12 a 18 meses para deferimento, podendo estender-se a 24 meses em caso de exigências ou oposição.\n- **Custo-benefício:** Via mais econômica e direta; taxas do INPI para pequenas empresas são reduzidas.\n- **Risco principal:** Possibilidade de oposição por titular de marca similar não identificada na busca prévia do cliente.\n\n**VIA JUDICIAL — Ação de abstenção de uso (se oposição)**\n- **O quê:** Ação judicial para garantir direito de uso da marca em caso de oposição infundada ou uso indevido por terceiros.\n- **Fundamento legal:** [VERIFICAR: Lei 9.279/1996, Art. 207 e seguintes; CPC Art. 300 para tutela de urgência]\n- **Prazo estimado:** 1 a 3 anos em primeira instância.\n- **Custo-benefício:** Justifica-se apenas se houver oposição concreta ou uso indevido da marca por concorrente.\n- **Risco principal:** Custos processuais elevados em relação ao valor do registro administrativo.\n\n**Recomendação preliminar:** Iniciar pela via administrativa com depósito direto no INPI. A busca prévia negativa é bom indicativo. Sugere-se monitorar a publicação na RPI para responder rapidamente a eventual oposição. A via judicial deve ser reservada como contingência.\n\n## 3. DOCUMENTOS\n\n### 3A. Procuração Ad Judicia\n\nPROCURAÇÃO AD JUDICIA\n\nOutorgante: JOÃO SILVA / JS ALIMENTOS, inscrito no CNPJ sob nº 12.345.678/0001-90, com endereço na Rua das Flores, 123, São Paulo/SP, CEP 01234-000.\n\nOutorgado: _________________ [PREENCHER: nome do advogado, OAB nº]\n\nPoderes: Por este instrumento particular de procuração, o outorgante nomeia e constitui o outorgado seu bastante procurador, com poderes para o foro em geral, conforme Art. 105 do CPC, podendo propor ações, contestar, recorrer, transigir, desistir, dar e receber quitação, firmar compromissos, substabelecer com ou sem reserva de poderes, e praticar todos os atos necessários ao bom e fiel desempenho deste mandato, perante o INPI e quaisquer órgãos administrativos ou judiciais.\n\nSão Paulo, _________________ [PREENCHER: data].\n\n_________________\nJoão Silva / JS Alimentos\n\n### 3B. Contrato de Honorários Advocatícios\n\nCONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS\n\nCONTRATANTE: JOÃO SILVA / JS ALIMENTOS, CNPJ 12.345.678/0001-90, endereço: Rua das Flores, 123, São Paulo/SP.\n\nCONTRATADO: _________________ [PREENCHER: nome do advogado, OAB nº]\n\nCLÁUSULA 1ª — DO OBJETO: Prestação de serviços advocatícios para registro da marca \"Café Premium\" no INPI, classe 30, incluindo acompanhamento do processo administrativo até decisão final.\n\nCLÁUSULA 2ª — DOS HONORÁRIOS: _________________ [PREENCHER: valor e forma de pagamento dos honorários]\n\nCLÁUSULA 3ª — DAS DESPESAS: As despesas processuais, taxas do INPI (GRU) e demais custos serão de responsabilidade do CONTRATANTE.\n\nCLÁUSULA 4ª — DA VIGÊNCIA: O presente contrato vigorará até a conclusão definitiva do processo de registro.\n\nCLÁUSULA 5ª — DA RESCISÃO: O contrato poderá ser rescindido por qualquer das partes mediante notificação escrita com 30 dias de antecedência.\n\nCLÁUSULA 6ª — DO SIGILO: O CONTRATADO se compromete a manter sigilo sobre todas as informações recebidas em razão do presente contrato.\n\nCLÁUSULA 7ª — DO FORO: Fica eleito o foro da Comarca de São Paulo/SP para dirimir quaisquer controvérsias.\n\nSão Paulo, _________________ [PREENCHER: data].\n\n_________________\nCONTRATANTE\n\n_________________\nCONTRATADO"
+    }
+  ],
+  "usage": {
+    "input_tokens": 1500,
+    "output_tokens": 2800
+  }
+}
