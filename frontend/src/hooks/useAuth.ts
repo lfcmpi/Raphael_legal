@@ -20,6 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: UserInfo | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -66,6 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("user", JSON.stringify(u));
   }, []);
 
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const resp = await api.post("/auth/google", { credential });
+    localStorage.setItem("token", resp.data.access_token);
+    setIsAuthenticated(true);
+    const meResp = await api.get("/auth/me");
+    const u = meResp.data as UserInfo;
+    setUser(u);
+    localStorage.setItem("user", JSON.stringify(u));
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -75,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return createElement(
     AuthContext.Provider,
-    { value: { isAuthenticated, user, login, logout } },
+    { value: { isAuthenticated, user, login, loginWithGoogle, logout } },
     children
   );
 }

@@ -24,7 +24,7 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=_new_id)
     email = Column(String, unique=True, nullable=False, index=True)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)
     nome = Column(String, nullable=False)
     role = Column(String, nullable=False, default="consulta")  # admin | manager | consulta
     created_at = Column(DateTime, default=_utcnow)

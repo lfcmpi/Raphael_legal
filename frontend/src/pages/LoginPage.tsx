@@ -1,18 +1,87 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (
+            element: HTMLElement,
+            config: {
+              theme?: string;
+              size?: string;
+              width?: number;
+              text?: string;
+              locale?: string;
+            }
+          ) => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
   if (isAuthenticated) {
     navigate("/dashboard", { replace: true });
     return null;
+  }
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => {
+      window.google?.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+      });
+      if (googleBtnRef.current) {
+        window.google?.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline",
+          size: "large",
+          width: 384,
+          text: "signin_with",
+          locale: "pt-BR",
+        });
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
+  async function handleGoogleCallback(response: { credential: string }) {
+    setError("");
+    setLoading(true);
+    try {
+      await loginWithGoogle(response.credential);
+      navigate("/dashboard", { replace: true });
+    } catch {
+      setError("Falha ao entrar com Google.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -38,6 +107,20 @@ export default function LoginPage() {
           </h1>
           <p className="text-gray-500 mt-2">Sistema de Processamento Jurídico</p>
         </div>
+
+        {GOOGLE_CLIENT_ID && (
+          <>
+            <div ref={googleBtnRef} className="flex justify-center mb-4" />
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-4 text-gray-500">ou</span>
+              </div>
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
