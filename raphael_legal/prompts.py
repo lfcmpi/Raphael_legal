@@ -114,7 +114,7 @@ def build_api_params(briefing: str, settings: Settings | None = None) -> dict:
         settings = Settings()
     return {
         "model": settings.MODEL_NAME,
-        "max_tokens": 8192,
+        "max_tokens": 16384,
         "system": SYSTEM_PROMPT,
         "messages": [{"role": "user", "content": briefing}],
         "tools": [FICHA_TOOL_SCHEMA],
