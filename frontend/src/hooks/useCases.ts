@@ -63,10 +63,16 @@ export function useCaseDetail(id: string) {
   });
 }
 
-export function useCaseStatus(id: string, enabled: boolean) {
+export function useCaseStatus(id: string, enabled: boolean, onCompleted?: () => void) {
   return useQuery<{ status: string; progress: string }>({
     queryKey: ["case-status", id],
-    queryFn: () => api.get(`/cases/${id}/status`).then((r) => r.data),
+    queryFn: async () => {
+      const res = await api.get(`/cases/${id}/status`);
+      if (res.data.status === "completed" || res.data.status === "error") {
+        onCompleted?.();
+      }
+      return res.data;
+    },
     enabled,
     refetchInterval: enabled ? 3000 : false,
   });
@@ -86,7 +92,10 @@ export function useReprocessCase() {
   return useMutation({
     mutationFn: (caseId: string) =>
       api.post(`/cases/${caseId}/process`).then((r) => r.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cases"] }),
+    onSuccess: (_data, caseId) => {
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["case", caseId] });
+    },
   });
 }
 

@@ -1,24 +1,33 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useCaseDetail, useReprocessCase, useUpdateCase } from "../hooks/useCases";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCaseDetail, useCaseStatus, useReprocessCase, useUpdateCase } from "../hooks/useCases";
 import { useAuth } from "../hooks/useAuth";
 import AlertBanner from "../components/AlertBanner";
 import FichaView from "../components/FichaView";
 import PanoramaView from "../components/PanoramaView";
 import DocumentsList from "../components/DocumentsList";
 import ProcessingStatus from "../components/ProcessingStatus";
+import TemplateSuggestions from "../components/TemplateSuggestions";
 import { toast } from "../components/Toast";
 
-type Tab = "ficha" | "panorama" | "documentos" | "briefing";
+type Tab = "ficha" | "panorama" | "documentos" | "modelos" | "briefing";
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const { data: caso, isLoading, isError } = useCaseDetail(id || "");
   const reprocess = useReprocessCase();
   const updateCase = useUpdateCase();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("ficha");
   const [editing, setEditing] = useState(false);
+  const isProcessing = caso?.status === "processing" || caso?.status === "pending";
+
+  // Poll for status while processing
+  useCaseStatus(id || "", isProcessing, () => {
+    queryClient.invalidateQueries({ queryKey: ["case", id] });
+  });
 
   const canEdit = user?.role === "admin" || user?.role === "manager";
 
@@ -56,6 +65,7 @@ export default function CaseDetailPage() {
     { key: "ficha", label: "Ficha do Caso" },
     { key: "panorama", label: "Panorama Estrategico" },
     { key: "documentos", label: "Documentos" },
+    { key: "modelos", label: "Modelos" },
     { key: "briefing", label: "Briefing Original" },
   ];
 
@@ -81,17 +91,33 @@ export default function CaseDetailPage() {
               {caso.complexidade}
             </span>
           )}
-          {canEdit && caso.status === "completed" && (
-            <button
-              onClick={() => setEditing(!editing)}
-              className={`ml-auto text-sm px-4 py-1.5 rounded-lg font-medium transition ${
-                editing
-                  ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
-                  : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {editing ? "Modo Edicao" : "Editar"}
-            </button>
+          {caso.status === "completed" && (
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() =>
+                  reprocess.mutate(caso.id, {
+                    onSuccess: () => toast("Reprocessamento iniciado.", "success"),
+                    onError: () => toast("Falha ao reprocessar. Tente novamente."),
+                  })
+                }
+                disabled={reprocess.isPending}
+                className="text-sm px-4 py-1.5 rounded-lg font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                {reprocess.isPending ? "Reprocessando..." : "Reprocessar"}
+              </button>
+              {canEdit && (
+                <button
+                  onClick={() => setEditing(!editing)}
+                  className={`text-sm px-4 py-1.5 rounded-lg font-medium transition ${
+                    editing
+                      ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                      : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {editing ? "Modo Edicao" : "Editar"}
+                </button>
+              )}
+            </div>
           )}
         </div>
         <p className="text-sm text-gray-500">
@@ -203,6 +229,10 @@ export default function CaseDetailPage() {
 
             {activeTab === "documentos" && (
               <DocumentsList documents={caso.documentos} />
+            )}
+
+            {activeTab === "modelos" && (
+              <TemplateSuggestions caseId={caso.id} />
             )}
 
             {activeTab === "briefing" && (

@@ -54,6 +54,7 @@ class Case(Base):
 
     user = relationship("User", back_populates="cases")
     documents = relationship("Document", back_populates="case")
+    case_templates = relationship("CaseTemplate", back_populates="case")
 
 
 class Document(Base):
@@ -69,3 +70,35 @@ class Document(Base):
     created_at = Column(DateTime, default=_utcnow)
 
     case = relationship("Case", back_populates="documents")
+
+
+class Template(Base):
+    __tablename__ = "templates"
+
+    id = Column(String, primary_key=True, default=_new_id)
+    nome = Column(String, nullable=False)
+    descricao = Column(Text, nullable=True)
+    categoria = Column(String, nullable=False, default="custom")  # procuracao | contrato | peticao | custom
+    caminho_docx = Column(String, nullable=True)  # path to the DOCX template file
+    materias_aplicaveis = Column(Text, nullable=True)  # JSON array of applicable legal matters
+    ativo = Column(Integer, default=1)  # 1=active, 0=inactive
+    created_by = Column(String, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+    creator = relationship("User")
+    case_templates = relationship("CaseTemplate", back_populates="template")
+
+
+class CaseTemplate(Base):
+    __tablename__ = "case_templates"
+
+    id = Column(String, primary_key=True, default=_new_id)
+    case_id = Column(String, ForeignKey("cases.id"), nullable=False)
+    template_id = Column(String, ForeignKey("templates.id"), nullable=False)
+    status = Column(String, nullable=False, default="selected")  # suggested | selected | generated
+    caminho_gerado = Column(String, nullable=True)  # path to the generated file
+    created_at = Column(DateTime, default=_utcnow)
+
+    case = relationship("Case", back_populates="case_templates")
+    template = relationship("Template", back_populates="case_templates")

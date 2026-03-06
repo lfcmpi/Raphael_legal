@@ -155,10 +155,18 @@ def reprocess_case(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CaseStatusResponse:
-    """Re-process a case (e.g. after an error)."""
+    """Re-process a case (e.g. after an error or to refresh with updated AI)."""
+    from api.db_models import Document
+
     case = case_service.get_case(db, case_id)
     if not case or case.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Caso nao encontrado")
+
+    # Remove generated documents (keep uploads)
+    db.query(Document).filter(
+        Document.case_id == case_id,
+        Document.tipo.in_(["procuracao", "contrato_honorarios", "panorama", "ficha"]),
+    ).delete(synchronize_session=False)
 
     case.status = "pending"
     case.error_message = None

@@ -8,6 +8,7 @@ import NewCasePage from "./pages/NewCasePage";
 import CaseDetailPage from "./pages/CaseDetailPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
+import TemplatesPage from "./pages/TemplatesPage";
 
 export default function App() {
   return (
@@ -41,6 +42,16 @@ export default function App() {
             <ProtectedRoute>
               <Layout>
                 <CaseDetailPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/templates"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <TemplatesPage />
               </Layout>
             </ProtectedRoute>
           }

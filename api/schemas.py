@@ -120,3 +120,59 @@ class UserUpdateRequest(BaseModel):
     nome: str | None = None
     password: str | None = None
     role: str | None = None
+
+
+# --- Templates ---
+
+
+class TemplateResponse(BaseModel):
+    id: str
+    nome: str
+    descricao: str | None
+    categoria: str
+    materias_aplicaveis: list[str] = []
+    ativo: bool = True
+    caminho_docx: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TemplateListResponse(BaseModel):
+    templates: list[TemplateResponse]
+    total: int
+
+
+class TemplateCreateRequest(BaseModel):
+    nome: str
+    descricao: str | None = None
+    categoria: str = "custom"
+    materias_aplicaveis: list[str] = []
+
+
+class TemplateUpdateRequest(BaseModel):
+    nome: str | None = None
+    descricao: str | None = None
+    categoria: str | None = None
+    materias_aplicaveis: list[str] | None = None
+    ativo: bool | None = None
+
+
+class CaseTemplateResponse(BaseModel):
+    id: str
+    template_id: str
+    template_nome: str
+    template_categoria: str
+    template_descricao: str | None
+    status: str
+    caminho_gerado: str | None
+    created_at: datetime
+
+
+class CaseTemplateSuggestionResponse(BaseModel):
+    suggested: list[TemplateResponse]
+    already_selected: list[str] = []
+
+
+class CaseTemplateSelectRequest(BaseModel):
+    template_ids: list[str]
