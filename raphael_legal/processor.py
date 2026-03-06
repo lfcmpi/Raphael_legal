@@ -84,12 +84,38 @@ def _parse_text_sections(text: str) -> tuple[str, list[DocumentoGerado]]:
     panorama = ""
     documentos: list[DocumentoGerado] = []
 
-    # Split panorama and documentos
-    panorama_match = re.search(r"## 2\..*?(?=## 3\.|$)", text, re.DOTALL)
+    # Try multiple header patterns for panorama section
+    panorama_match = re.search(
+        r"(##\s*2[\.\s\-—]+.*?PANORAMA.*?)(?=##\s*3[\.\s\-—]|$)",
+        text,
+        re.DOTALL | re.IGNORECASE,
+    )
+    if not panorama_match:
+        # Fallback: any "PANORAMA" header followed by content
+        panorama_match = re.search(
+            r"(#+\s*.*?PANORAMA\s+ESTRAT[ÉE]GICO.*?)(?=#+\s*.*?DOCUMENTO|$)",
+            text,
+            re.DOTALL | re.IGNORECASE,
+        )
+    if not panorama_match:
+        # Last resort: section 2 with any title
+        panorama_match = re.search(
+            r"(##\s*2\..*?)(?=##\s*3\.|$)",
+            text,
+            re.DOTALL,
+        )
     if panorama_match:
-        panorama = panorama_match.group(0).strip()
+        panorama = panorama_match.group(1).strip()
+        logger.info("Panorama extraído com %d caracteres", len(panorama))
+    else:
+        logger.warning(
+            "Panorama não encontrado no texto. Headers encontrados: %s",
+            re.findall(r"^#{1,4}\s.*$", text, re.MULTILINE),
+        )
 
-    docs_match = re.search(r"## 3\..*", text, re.DOTALL)
+    docs_match = re.search(r"##\s*3[\.\s\-—].*", text, re.DOTALL)
+    if not docs_match:
+        docs_match = re.search(r"#+\s*.*?DOCUMENTO.*", text, re.DOTALL | re.IGNORECASE)
     if docs_match:
         docs_text = docs_match.group(0)
         # Split by sub-headers (### 3A., ### 3B., etc.)
@@ -150,12 +176,84 @@ class CaseProcessor:
             elif block.type == "text":
                 text_parts.append(block.text)
 
+        # When Claude uses tool_use, stop_reason="tool_use" and it stops.
+        # We need to send tool_result(s) so Claude continues with Stages 2 and 3.
+        # Handle multiple rounds if Claude makes additional tool calls.
+        messages = [{"role": "user", "content": briefing}]
+        current_response = response
+        max_continuations = 3
+
+        for turn in range(max_continuations):
+            if current_response.stop_reason != "tool_use":
+                break
+
+            tool_use_blocks = [
+                b for b in current_response.content if b.type == "tool_use"
+            ]
+            if not tool_use_blocks:
+                break
+
+            logger.info(
+                "Turn %d: enviando tool_result para %d tool(s)",
+                turn + 1,
+                len(tool_use_blocks),
+            )
+
+            # Build tool results for all tool_use blocks
+            tool_results = []
+            for tb in tool_use_blocks:
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tb.id,
+                    "content": "Ficha registrada com sucesso. Prossiga com a Etapa 2 (Panorama Estrategico) e Etapa 3 (Documentos).",
+                })
+
+            messages.append({"role": "assistant", "content": current_response.content})
+            messages.append({"role": "user", "content": tool_results})
+
+            continuation = self._client.messages.create(
+                model=params["model"],
+                max_tokens=params["max_tokens"],
+                system=params["system"],
+                messages=messages,
+                tools=params["tools"],
+                tool_choice={"type": "auto"},
+            )
+            logger.info(
+                "Continuation turn %d: stop_reason=%s, blocks=%d",
+                turn + 1,
+                continuation.stop_reason,
+                len(continuation.content),
+            )
+            for block in continuation.content:
+                if block.type == "text":
+                    text_parts.append(block.text)
+                    logger.info("Continuation text block: %d chars", len(block.text))
+                elif block.type == "tool_use" and block.name == "extrair_ficha_caso":
+                    if ficha is None:
+                        ficha = _build_ficha_from_tool_input(block.input)
+
+            current_response = continuation
+
+        if current_response.stop_reason == "max_tokens":
+            logger.warning("Resposta truncada por max_tokens — panorama pode estar incompleto")
+
         full_text = "\n\n".join(text_parts)
+        logger.info(
+            "full_text: %d chars, %d text_parts",
+            len(full_text),
+            len(text_parts),
+        )
 
         if ficha is None:
             ficha = _fallback_ficha_from_text(full_text)
 
         panorama, documentos = _parse_text_sections(full_text)
+        logger.info(
+            "Resultado: panorama=%d chars, documentos=%d",
+            len(panorama),
+            len(documentos),
+        )
 
         return CaseOutput(
             ficha=ficha,
